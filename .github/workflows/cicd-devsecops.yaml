@@ -1,0 +1,150 @@
+name: CI/CD to AWS EKS
+
+on:
+  # Triggers the workflow on push or pull request events for main
+  push:  
+    tags: [ v*.*.* ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-southeast-1                   # set this to your preferred AWS region, e.g. us-west-1
+  ECR_REPOSITORY: fast-campus                  # set this to your ECR repository name 
+  EKS_CLUSTER_NAME: fast-campus-cluster        # set this to your EKS cluster name 
+  KUBERNETES_NAMESPACE: app                    # set this to your Kubernetes namespace
+  HELM_CHART_PATH: deployment/k8s              # set this to your Helm chart path
+  HELM_CHART_NAME: hello-world                 # set this to your Helm chart name
+  SONAR_PROJECT_KEY: fast-campus-devsecops     # set this to your SonarCloud project key  
+  SONAR_ORGANIZATION: mirdsmulya               # set this to your SonarCloud organization 
+
+# A workflow run is made up of one or more jobs 
+jobs:
+  # This workflow contains a job called "Run Go tests"
+  go-test:
+    name: Run Go tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.22
+
+      - name: Run tests
+        run: go test -v ./...
+
+  code-analysis:
+    name: Code Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Analyze with SonarCloud
+        uses: SonarSource/sonarcloud-github-action@4006f663ecaf1f8093e8e4abb9227f6041f52216
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   # Generate a token on Sonarcloud.io, add it to the secrets of this repo with the name SONAR_TOKEN (Settings > Secrets > Actions > add new repository secret)
+        with:
+          args:
+            -Dsonar.projectKey=$SONAR_PROJECT_KEY 
+            -Dsonar.organization=$SONAR_ORGANIZATION  
+          projectBaseDir: .
+
+  image-scan:
+    name: Image Vulnerability Scan
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+    runs-on: "ubuntu-20.04"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build an image from Dockerfile
+        run: |
+          docker build -t test-app:${{ github.sha }} .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+        with:
+          image-ref: 'test-app:${{ github.sha }}'
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,WARN,INFO'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+
+  # This workflow contains a job called "build and push image"
+  build-and-push-image:
+    # The type of runner that the job will run on
+    name: Build and push Image to Amazon ECR
+    needs: go-test
+    runs-on: ubuntu-latest
+    if: startsWith (github.ref, 'refs/tags/')
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push docker image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ env.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{  github.ref_name }}
+        run: |
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+  deploy-to-eks:
+    name: Deploy to Amazon EKS
+    runs-on: ubuntu-latest
+    needs: build-and-push-image
+    if: startsWith (github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x ./kubectl
+          sudo mv ./kubectl /usr/local/bin/kubectl
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Install Helm
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+
+      - name: Deploy to EKS using Helm
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ env.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.ref_name }}
+        run: |
+          helm upgrade --install $HELM_CHART_NAME ./$HELM_CHART_PATH -f $HELM_CHART_PATH/values.yaml --namespace $KUBERNETES_NAMESPACE \
+            --set image.tag=$IMAGE_TAG
