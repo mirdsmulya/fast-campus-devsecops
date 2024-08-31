@@ -12,14 +12,14 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: ap-southeast-1                   # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY: fast-campus                  # set this to your ECR repository name 
-  EKS_CLUSTER_NAME: fast-campus-cluster        # set this to your EKS cluster name 
-  KUBERNETES_NAMESPACE: app                    # set this to your Kubernetes namespace
-  HELM_CHART_PATH: deployment/k8s              # set this to your Helm chart path
-  HELM_CHART_NAME: hello-world                 # set this to your Helm chart name
-  SONAR_PROJECT_KEY: fast-campus-devsecops     # set this to your SonarCloud project key  
-  SONAR_ORGANIZATION: mirdsmulya               # set this to your SonarCloud organization 
+  AWS_REGION: ap-southeast-1                           # set this to your preferred AWS region, e.g. us-west-1
+  ECR_REPOSITORY: fast-campus                          # set this to your ECR repository name 
+  EKS_CLUSTER_NAME: fast-campus-cluster                # set this to your EKS cluster name 
+  KUBERNETES_NAMESPACE: app                            # set this to your Kubernetes namespace
+  HELM_CHART_PATH: deployment/k8s                      # set this to your Helm chart path
+  HELM_CHART_NAME: hello-world                         # set this to your Helm chart name
+  SONAR_PROJECT_KEY: mirdsmulya_fast-campus-devsecops  # set this to your SonarCloud project key  
+  SONAR_ORGANIZATION: mirdsmulya                       # set this to your SonarCloud organization 
 
 # A workflow run is made up of one or more jobs 
 jobs:
