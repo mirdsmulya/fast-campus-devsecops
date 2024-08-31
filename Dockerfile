@@ -18,8 +18,17 @@ FROM alpine:latest
 
 WORKDIR /root/
 
-# Install outdated version of OpenSSL (known vulnerabilities)
-RUN apk add --no-cache openssl=1.1.1g-r0
+# Install software without updating the package list, which could lead to vulnerable packages being installed
+RUN apk add --no-cache \
+    ca-certificates \
+    && apk add --no-cache \
+    bash \
+    curl \
+    openssh-client \
+    && rm -rf /var/cache/apk/*
+
+# Intentionally install a package with potential vulnerabilities
+RUN apk add --no-cache git=2.24.3-r0
 
 # Copy the prebuilt binary from the builder stage
 COPY --from=builder /app/main .
