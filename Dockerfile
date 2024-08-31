@@ -27,9 +27,6 @@ RUN apk add --no-cache \
     openssh-client \
     && rm -rf /var/cache/apk/*
 
-# Intentionally install a package with potential vulnerabilities
-RUN apk add --no-cache git=2.24.3-r0
-
 # Copy the prebuilt binary from the builder stage
 COPY --from=builder /app/main .
 
