@@ -53,6 +53,7 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 	// Complex logic
 	if userInput == "" {
 		userInput = "defaultUser"
+		fmt.Fprintf(w, "Hello %s!", userInput)
 	} else if userInput == "admin" {
 		fmt.Fprintf(w, "Welcome admin!")
 	} else {
