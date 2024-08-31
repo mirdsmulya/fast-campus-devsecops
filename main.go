@@ -25,20 +25,11 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
-	"os"
-)
-
-package main
-
-import (
 	"crypto/md5" // Using a weak cryptographic algorithm
 	"encoding/hex"
 	"fmt"
-	"net/http"
-	"os"
 	"log"
+	"net/http"
 )
 
 func insecureHashing(input string) string {
@@ -89,7 +80,7 @@ func main() {
 	}
 }
 
-func startServer() {	
+func startServer() {
 	http.HandleFunc("/", helloHandler)
 	fmt.Println("Server starting on port 5000...")
 	_ = http.ListenAndServe(":5000", nil)
