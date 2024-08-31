@@ -1,0 +1,40 @@
+package main
+
+import (
+    "database/sql"
+    "fmt"
+    "log"
+    _ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+    // Hard-coded credentials (Security Hotspot)
+    username := "root"
+    password := "password123"
+
+    // Database connection string vulnerable to SQL Injection
+    connString := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/testdb", username, password)
+    db, err := sql.Open("mysql", connString)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer db.Close()
+
+    userInput := "' OR 1=1 -- "  // User input that could be exploited
+    query := fmt.Sprintf("SELECT * FROM users WHERE username='%s'", userInput) // SQL Injection vulnerability
+    rows, err := db.Query(query)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer rows.Close()
+
+    for rows.Next() {
+        var id int
+        var username string
+        var email string
+        if err := rows.Scan(&id, &username, &email); err != nil {
+            log.Fatal(err)
+        }
+        fmt.Printf("ID: %d, Username: %s, Email: %s\n", id, username, email)
+    }
+}
