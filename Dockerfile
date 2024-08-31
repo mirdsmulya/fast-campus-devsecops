@@ -14,7 +14,7 @@ COPY . .
 RUN go build -o main .
 
 # Start a new stage from scratch
-FROM alpine:latest
+FROM alpine:3.8
 
 WORKDIR /root/
 
