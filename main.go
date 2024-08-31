@@ -14,15 +14,14 @@
 // 	fmt.Fprintf(w, "Hello World from %s!", name)
 // }
 
-// func main() {
-// 	http.HandleFunc("/", helloHandler)
-// 	fmt.Println("Server starting on port 5000...")
-// 	err := http.ListenAndServe(":5000", nil)
-// 	if err != nil {
-// 		fmt.Println("Error starting server: ", err)
-// 	}
-// }
-
+//	func main() {
+//		http.HandleFunc("/", helloHandler)
+//		fmt.Println("Server starting on port 5000...")
+//		err := http.ListenAndServe(":5000", nil)
+//		if err != nil {
+//			fmt.Println("Error starting server: ", err)
+//		}
+//	}
 package main
 
 import (
@@ -51,10 +50,27 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello World from %s!", name)
 }
 
-func main() {
-	http.HandleFunc("/", helloHandler)
-	fmt.Println("Server starting on port 5000...")
-
+func startServer() {
 	// Ignore error returned by ListenAndServe (Code Smell)
 	_ = http.ListenAndServe(":5000", nil)
+}
+
+func main() {
+	http.HandleFunc("/", helloHandler)
+
+	// Introduce duplicate code (Code Duplication)
+	for i := 0; i < 3; i++ {
+		fmt.Println("Starting server attempt:", i)
+		startServer()
+	}
+
+	// Introduce a bug: Infinite loop causing high CPU usage (New Bug)
+	for {
+		fmt.Println("This loop will run forever and cause high CPU usage")
+	}
+
+	// Unreachable code that is never tested (Decrease Test Coverage)
+	if false {
+		fmt.Println("This code is unreachable")
+	}
 }
