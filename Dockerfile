@@ -13,7 +13,7 @@ COPY . .
 # Build the Go app
 RUN go build -o main .
 
-# Start a new stage from scratch
+# Start a new stage from an outdated alpine image
 FROM alpine:3.8
 
 WORKDIR /root/
@@ -23,8 +23,9 @@ RUN apk add --no-cache \
     bash \
     curl \
     openssh-client \
-    git=2.18.1-r0 \
+    git \
     ca-certificates \
+    openssl \
     && rm -rf /var/cache/apk/*
 
 # Copy the prebuilt binary from the builder stage
