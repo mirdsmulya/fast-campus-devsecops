@@ -1,40 +1,35 @@
 package main
 
 import (
-    "database/sql"
-    "fmt"
-    "log"
-    _ "github.com/go-sql-driver/mysql"
+	"fmt"
+	"net/http"
+	"os"
 )
 
+func helloHandler(w http.ResponseWriter, r *http.Request) {
+	// Hard-coded secret key (Security Hotspot)
+	secretKey := "superSecretKey123"
+
+	// Use query parameter without validation (Code Smell / Security Hotspot)
+	name := r.URL.Query().Get("name")
+	if name == "" {
+		name = os.Getenv("NAME")
+		if name == "" {
+			name = "Mirdan"
+		}
+	}
+
+	// Print the secret key to the console (Security Hotspot)
+	fmt.Println("Using secret key: ", secretKey)
+
+	// Potential XSS vulnerability by reflecting user input
+	fmt.Fprintf(w, "Hello World from %s!", name)
+}
+
 func main() {
-    // Hard-coded credentials (Security Hotspot)
-    username := "root"
-    password := "password123"
+	http.HandleFunc("/", helloHandler)
+	fmt.Println("Server starting on port 5000...")
 
-    // Database connection string vulnerable to SQL Injection
-    connString := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/testdb", username, password)
-    db, err := sql.Open("mysql", connString)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer db.Close()
-
-    userInput := "' OR 1=1 -- "  // User input that could be exploited
-    query := fmt.Sprintf("SELECT * FROM users WHERE username='%s'", userInput) // SQL Injection vulnerability
-    rows, err := db.Query(query)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer rows.Close()
-
-    for rows.Next() {
-        var id int
-        var username string
-        var email string
-        if err := rows.Scan(&id, &username, &email); err != nil {
-            log.Fatal(err)
-        }
-        fmt.Printf("ID: %d, Username: %s, Email: %s\n", id, username, email)
-    }
+	// Ignore error returned by ListenAndServe (Code Smell)
+	_ = http.ListenAndServe(":5000", nil)
 }

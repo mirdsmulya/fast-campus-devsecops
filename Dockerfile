@@ -18,6 +18,9 @@ FROM alpine:latest
 
 WORKDIR /root/
 
+# Install outdated version of OpenSSL (known vulnerabilities)
+RUN apk add --no-cache openssl=1.1.1g-r0
+
 # Copy the prebuilt binary from the builder stage
 COPY --from=builder /app/main .
 
