@@ -30,33 +30,46 @@ import (
 	"os"
 )
 
-func helloHandler(w http.ResponseWriter, r *http.Request) {
-	// Hard-coded secret key (Security Hotspot)
-	secretKey := "superSecretKey123"
+package main
 
-	// Use query parameter without validation (Code Smell / Security Hotspot)
-	name := r.URL.Query().Get("name")
-	if name == "" {
-		name = os.Getenv("NAME")
-		if name == "" {
-			name = "Mirdan"
-		}
-	}
+import (
+	"crypto/md5" // Using a weak cryptographic algorithm
+	"encoding/hex"
+	"fmt"
+	"net/http"
+	"os"
+	"log"
+)
 
-	// Print the secret key to the console (Security Hotspot)
-	fmt.Println("Using secret key: ", secretKey)
-
-	// Potential XSS vulnerability by reflecting user input
-	fmt.Fprintf(w, "Hello World from %s!", name)
+func insecureHashing(input string) string {
+	// Use a weak hashing function (MD5)
+	hash := md5.New()
+	hash.Write([]byte(input))
+	return hex.EncodeToString(hash.Sum(nil))
 }
 
-func startServer() {
-	// Ignore error returned by ListenAndServe (Code Smell)
-	_ = http.ListenAndServe(":5000", nil)
+func helloHandler(w http.ResponseWriter, r *http.Request) {
+	// Hard-coded credentials (Security Hotspot)
+	secretKey := "hardCodedSecretKey123"
+	username := "admin"
+
+	// Log sensitive data (Security Hotspot)
+	log.Printf("Username: %s, SecretKey: %s", username, secretKey)
+
+	// Potential for SQL Injection if used in a query
+	userInput := r.URL.Query().Get("input")
+
+	// Complex logic
+	if userInput == "" {
+		userInput = "defaultUser"
+	} else if userInput == "admin" {
+		fmt.Fprintf(w, "Welcome admin!")
+	} else {
+		fmt.Fprintf(w, "Hello %s!", userInput)
+	}
 }
 
 func main() {
-	http.HandleFunc("/", helloHandler)
 
 	// Introduce duplicate code (Code Duplication)
 	for i := 0; i < 3; i++ {
@@ -64,13 +77,20 @@ func main() {
 		startServer()
 	}
 
+	http.HandleFunc("/", helloHandler)
+	fmt.Println("Server starting on port 5000...")
+
+	// Ignore error handling (Reliability Issue)
+	_ = http.ListenAndServe(":5000", nil)
+
 	// Introduce a bug: Infinite loop causing high CPU usage (New Bug)
 	for {
 		fmt.Println("This loop will run forever and cause high CPU usage")
 	}
+}
 
-	// Unreachable code that is never tested (Decrease Test Coverage)
-	if false {
-		fmt.Println("This code is unreachable")
-	}
+func startServer() {	
+	http.HandleFunc("/", helloHandler)
+	fmt.Println("Server starting on port 5000...")
+	_ = http.ListenAndServe(":5000", nil)
 }

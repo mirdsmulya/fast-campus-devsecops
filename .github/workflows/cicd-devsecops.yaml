@@ -48,6 +48,7 @@ jobs:
           args:
             -Dsonar.projectKey=$SONAR_PROJECT_KEY 
             -Dsonar.organization=$SONAR_ORGANIZATION  
+            -Dsonar.qualitygate.wait=true
           projectBaseDir: .
 
   image-scan:
