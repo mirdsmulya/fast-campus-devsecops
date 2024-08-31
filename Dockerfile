@@ -20,11 +20,11 @@ WORKDIR /root/
 
 # Install software without updating the package list, which could lead to vulnerable packages being installed
 RUN apk add --no-cache \
-    ca-certificates \
-    && apk add --no-cache \
     bash \
     curl \
     openssh-client \
+    git=2.18.1-r0 \
+    ca-certificates \
     && rm -rf /var/cache/apk/*
 
 # Copy the prebuilt binary from the builder stage
