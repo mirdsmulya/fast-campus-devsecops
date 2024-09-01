@@ -64,9 +64,8 @@ jobs:
         with:
           args: 
             -Dsonar.qualitygate.wait=true
-            -Dsonar.projectKey=$SONAR_PROJECT_KEY
-            -Dsonar.organization=$SONAR_ORGANIZATION
-        
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ env.SONAR_ORGANIZATION }}
 
   image-scan:
     name: Image Vulnerability Scan (Trivy)
