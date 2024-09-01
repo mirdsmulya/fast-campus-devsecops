@@ -41,7 +41,7 @@ func insecureHashing(input string) string {
 
 func helloHandler(w http.ResponseWriter, r *http.Request) {
 	// Hard-coded credentials (Security Hotspot)
-	secretKey := "hardCodedSecretKey123"
+	secretKey := "hardCodedSasdasdecretKey123"
 	username := "admin"
 
 	// Log sensitive data (Security Hotspot)
