@@ -23,9 +23,9 @@ RUN apk add --no-cache \
     bash \
     curl \
     openssh-client \
-    git \
     ca-certificates \
-    openssl \
+    shadow \
+    sudo \
     && rm -rf /var/cache/apk/*
 
 # Copy the prebuilt binary from the builder stage
