@@ -3,50 +3,26 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
 )
 
 func helloHandler(w http.ResponseWriter, r *http.Request) {
-	// Hard-coded secret key (Security Hotspot)
-	secretKey := "superSecretKey123"
+	// Retrieve the user input from the query parameters
+	userInput := r.URL.Query().Get("input")
 
-	// Use query parameter without validation (Code Smell / Security Hotspot)
-	name := r.URL.Query().Get("name")
-	if name == "" {
-		name = os.Getenv("NAME")
-		if name == "" {
-			name = "Mirdan"
-		}
+	// Check the user input and respond accordingly
+	if userInput == "" {
+		fmt.Fprintf(w, "Hello defaultUser!")
+	} else if userInput == "admin" {
+		fmt.Fprintf(w, "Welcome admin!")
+	} else {
+		fmt.Fprintf(w, "Hello %s!", userInput)
 	}
-
-	// Print the secret key to the console (Security Hotspot)
-	fmt.Println("Using secret key: ", secretKey)
-
-	// Potential XSS vulnerability by reflecting user input
-	fmt.Fprintf(w, "Hello World from %s!", name)
-}
-
-func startServer() {
-	// Ignore error returned by ListenAndServe (Code Smell)
-	_ = http.ListenAndServe(":5000", nil)
 }
 
 func main() {
+	// Register the handler function for the root path
 	http.HandleFunc("/", helloHandler)
 
-	// Introduce duplicate code (Code Duplication)
-	for i := 0; i < 3; i++ {
-		fmt.Println("Starting server attempt:", i)
-		startServer()
-	}
-
-	// Introduce a bug: Infinite loop causing high CPU usage (New Bug)
-	for {
-		fmt.Println("This loop will run forever and cause high CPU usage")
-	}
-
-	// Unreachable code that is never tested (Decrease Test Coverage)
-	if false {
-		fmt.Println("This code is unreachable")
-	}
-}
+	// Start the HTTP server on port 5000
+	fmt.Println("Server starting on port 5000...")
+	err := http.ListenAndServe
