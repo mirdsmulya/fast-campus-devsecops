@@ -18,16 +18,6 @@ FROM alpine:3.8
 
 WORKDIR /root/
 
-# Install software without updating the package list, which could lead to vulnerable packages being installed
-RUN apk add --no-cache \
-    bash \
-    curl \
-    openssh-client \
-    ca-certificates \
-    shadow \
-    sudo \
-    && rm -rf /var/cache/apk/*
-
 # Copy the prebuilt binary from the builder stage
 COPY --from=builder /app/main .
 
