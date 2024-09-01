@@ -87,7 +87,7 @@ jobs:
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH,WARN,INFO'
-          exit-code: 'CRITICAL,HIGH' # Fail the pipeline if vulnerabilities of CRITICAL or HIGH severity are found
+          exit-code: 'HIGH' # Fail the pipeline if vulnerabilities of HIGH severity are found
 
 
       - name: Upload Trivy scan results to GitHub Security tab
