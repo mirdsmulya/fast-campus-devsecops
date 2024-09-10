@@ -151,5 +151,5 @@ jobs:
           REPOSITORY: ${{ env.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ github.ref_name }}
         run: |
-          helm upgrade --install $HELM_CHART_NAME ./$HELM_CHART_PATH -f $HELM_CHART_PATH/values.yaml --namespace $KUBERNETES_NAMESPACE \
+          helm upgrade --install $HELM_CHART_NAME ./$HELM_CHART_PATH -f $HELM_CHART_PATH/values.yaml --namespace $KUBERNETES_NAMESPACE --create-namespace \
             --set image.tag=$IMAGE_TAG
