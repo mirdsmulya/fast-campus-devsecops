@@ -2,7 +2,7 @@
 FROM golang:1.22-alpine AS builder
 
 # Add Maintainer Info
-LABEL maintainer="mirdan"
+LABEL maintainer="fast-campus"
 
 # Set the Current Working Directory inside the builder container
 WORKDIR /app
